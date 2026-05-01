@@ -1,0 +1,15 @@
+certifi==2026.2.25
+cffi==2.0.0
+charset-normalizer==3.4.7
+cryptography==47.0.0
+faiss-cpu==1.13.2
+idna==3.12
+lxml==6.1.0
+numpy==2.4.4
+packaging==26.1
+pycparser==3.0
+pypdf==6.10.2
+python-docx==1.2.0
+requests==2.33.1
+typing_extensions==4.15.0
+urllib3==2.6.3

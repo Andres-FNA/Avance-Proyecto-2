@@ -1,17 +1,12 @@
-# 🛰️ RAG Local — Analizador de Documentos Académicos
+#  RAG Local — Analizador de Documentos Académicos
 
 > Sistema de **Retrieval-Augmented Generation** completamente local, sin APIs externas, sin costo por consulta y con privacidad total de los datos.
-
-[![Python](https://img.shields.io/badge/Python-3.10%2B-blue?style=flat-square&logo=python)](https://www.python.org/)
-[![Ollama](https://img.shields.io/badge/Ollama-local%20LLM-black?style=flat-square)](https://ollama.com/)
-[![FAISS](https://img.shields.io/badge/FAISS-vector%20search-orange?style=flat-square)](https://faiss.ai/)
-[![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)](LICENSE)
 
 ---
 
 ## ¿Qué hace este proyecto?
 
-Carga documentos `.txt`, los indexa como vectores semánticos y te permite hacerles preguntas en lenguaje natural. El modelo responde **solo con lo que está en tus documentos**, citando la fuente exacta de cada afirmación.
+Carga documentos `.txt,PDF,Word`, los indexa como vectores semánticos y te permite hacerles preguntas en lenguaje natural. El modelo responde **solo con lo que está en tus documentos**, citando la fuente exacta de cada afirmación.
 
 ```
 Tu pregunta  →  Búsqueda semántica (FAISS)  →  Contexto relevante  →  Respuesta (Ollama)
@@ -23,13 +18,13 @@ Tu pregunta  →  Búsqueda semántica (FAISS)  →  Contexto relevante  →  Re
 
 ## Características principales
 
-- 🔒 **100% local** — ningún dato sale de tu equipo
-- 💸 **Sin costo por consulta** — sin APIs de pago
-- ✈️ **Funciona offline** — una vez instalado, no necesitas internet
-- 🔍 **Búsqueda semántica exacta** con FAISS (no por palabras clave)
-- 📄 **Cita las fuentes** — cada respuesta indica el documento y chunk de origen
-- 🤖 **Multi-modelo** — compatible con Mistral, LLaMA 3, Gemma y cualquier modelo de Ollama
-- 🛡️ **Sin alucinaciones forzadas** — si la información no está en el corpus, el sistema lo indica explícitamente
+-  **100% local** — ningún dato sale de tu equipo
+-  **Sin costo por consulta** — sin APIs de pago
+-  **Funciona offline** — una vez instalado, no necesitas internet
+-  **Búsqueda semántica exacta** con FAISS (no por palabras clave)
+-  **Cita las fuentes** — cada respuesta indica el documento y chunk de origen
+-  **Multi-modelo** — compatible con Mistral, LLaMA 3, Gemma y cualquier modelo de Ollama
+-  **Sin alucinaciones forzadas** — si la información no está en el corpus, el sistema lo indica explícitamente
 
 ---
 

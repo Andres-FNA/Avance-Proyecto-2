@@ -1,6 +1,6 @@
 #  RAG Local — Analizador de Documentos Académicos
 
-> Sistema de **Retrieval-Augmented Generation** completamente local, sin APIs externas, sin costo por consulta y con privacidad total de los datos. Diseñado específicamente para el análisis de corpus académicos: artículos científicos, tesis, revisiones bibliográficas y reportes de investigación.
+ Sistema de **Retrieval-Augmented Generation** completamente local, sin APIs externas, sin costo por consulta y con privacidad total de los datos. Diseñado específicamente para el análisis de corpus académicos: artículos científicos, tesis, revisiones bibliográficas y reportes de investigación.
 
 
 
@@ -569,7 +569,7 @@ El prompt enviado a Ollama sigue una estructura de 4 bloques:
 
 ---
 
-## 🤖 Modelos compatibles
+##  Modelos compatibles
 
 El sistema es compatible con cualquier modelo disponible en Ollama. Opciones recomendadas para análisis académico en español:
 
@@ -591,7 +591,7 @@ python main.py --interactive --model mistral
 
 ---
 
-## 📄 Conversión de documentos
+##  Conversión de documentos
 
 El sistema procesa únicamente archivos `.txt` con codificación UTF-8. Para convertir desde otros formatos:
 
@@ -647,7 +647,7 @@ done
 
 ---
 
-## 🧪 Pruebas de funcionamiento
+##  Pruebas de funcionamiento
 
 ### Resultados
 
@@ -670,7 +670,7 @@ score < 0.55   →  El corpus probablemente no contiene la información buscada
 
 ---
 
-## ⚠️ Errores frecuentes
+##  Errores frecuentes
 
 ### `[ERROR] No hay índice en 'vector_db/'`
 ```
@@ -686,12 +686,6 @@ Win/Mac:  Abrir la aplicación Ollama
 Verificar: curl http://localhost:11434/api/tags
 ```
 
-### `[ERROR] No se encontraron archivos .txt en 'docs/'`
-```
-Causa:    La carpeta docs/ está vacía o los archivos no tienen extensión .txt
-Verificar: ls docs/        (Linux/macOS)
-           dir docs\       (Windows)
-```
 
 ### Las respuestas salen en inglés
 ```
@@ -725,7 +719,7 @@ Luego:       pip install -r requirements.txt
 
 ---
 
-## 🔧 Decisiones técnicas
+##  Decisiones técnicas
 
 Una justificación completa de cada decisión de arquitectura (incluyendo comparativa con Gemini API, análisis del problema de precisión vectorial encontrado con NumPy, y estructura detallada del prompt) está disponible en el [documento técnico](docs/Sistema_RAG_Justificacion_Disenio.docx).
 

@@ -1,19 +1,13 @@
 """
 main.py
-Punto de entrada del sistema RAG con Ollama.
+Punto de entrada del sistema RAG básico con Ollama.
 
-Formatos soportados: .txt, .pdf, .docx
+Formatos soportados: .txt
 
 Uso:
   python main.py --index                        # Indexar documentos de docs/
-  python main.py --query "..." --model mistral  # Consulta directa
-  python main.py --query "..."                  # Consulta con seleccion interactiva
+  python main.py --query "tu pregunta aqui"     # Consulta directa
   python main.py --interactive                  # Modo interactivo
-  python main.py --interactive --model llama3   # Modo interactivo con modelo fijo
-  python main.py --models                       # Listar modelos de chat disponibles
-
-Dependencias extra para PDF y Word:
-  pip install pypdf python-docx
 """
 
 import os
@@ -22,39 +16,35 @@ import argparse
 
 from document_loader import load_documents_from_folder, build_chunks_from_documents
 from vector_store import VectorStore
-from rag_engine import RAGEngine, select_model, get_available_models
+from rag_engine import RAGEngine, select_model
 
 
 # ─────────────────────────────────────────────
-# Rutas del sistema
+# Configuración de rutas y parámetros
 # ─────────────────────────────────────────────
 
-DOCS_FOLDER  = "docs"       # Carpeta con documentos a indexar (.txt, .pdf, .docx)
-INDEX_FOLDER = "vector_db"  # Carpeta donde se guarda el indice FAISS
+DOCS_FOLDER  = "docs"        # Carpeta con los documentos .txt
+INDEX_FOLDER = "vector_db"   # Carpeta donde se guarda la base vectorial
 
-CHUNK_SIZE = 1500  # Tamaño de chunk en caracteres (mayor = módulos completos)
-OVERLAP    = 250   # Solapamiento entre chunks
+CHUNK_SIZE = 600  # Tamaño de chunk en caracteres — separa mejor secciones cortas
+OVERLAP    =150  # Solapamiento entre chunks
 
-
-# ─────────────────────────────────────────────
-# Flujo: Indexacion
-# ─────────────────────────────────────────────
+# Flujo 1: Indexación
 
 def run_indexing():
     print("=" * 60)
     print("  FASE 1: CARGA DE DOCUMENTOS")
-    print("  (formatos: .txt | .pdf | .docx)")
     print("=" * 60)
     documents = load_documents_from_folder(DOCS_FOLDER)
 
     if not documents:
-        print(f"\n[ERROR] No se encontraron documentos (.txt, .pdf, .docx) en '{DOCS_FOLDER}/'")
+        print(f"\n[ERROR] No se encontraron archivos .txt en '{DOCS_FOLDER}/'")
         sys.exit(1)
 
     print(f"\n  Total: {len(documents)} documento(s) cargado(s)")
 
     print("\n" + "=" * 60)
-    print("  FASE 2: CREACION DE CHUNKS")
+    print("  FASE 2: CREACIÓN DE CHUNKS")
     print("=" * 60)
     chunks = build_chunks_from_documents(
         documents,
@@ -64,31 +54,27 @@ def run_indexing():
     print(f"\n  Total: {len(chunks)} chunks generados")
 
     print("\n" + "=" * 60)
-    print("  FASE 3: VECTORIZACION Y BASE DE DATOS VECTORIAL")
+    print("  FASE 3: VECTORIZACIÓN Y BASE DE DATOS VECTORIAL")
     print("=" * 60)
     store = VectorStore()
     store.build_index(chunks)
 
     print("\n" + "=" * 60)
-    print("  FASE 4: PERSISTENCIA EN DISCO")
+    print("  FASE 4: GUARDADO EN DISCO")
     print("=" * 60)
     store.save(INDEX_FOLDER)
 
-    print("\n  Indexacion completada.")
-    print(f"    Documentos: {len(documents)}")
-    print(f"    Chunks:     {len(chunks)}")
-    print(f"    Vectores:   {store.index.ntotal}")
-    print(f"    Indice en:  {INDEX_FOLDER}/")
+    print("\n  Indexación completada.")
+    print(f"    Documentos : {len(documents)}")
+    print(f"    Chunks     : {len(chunks)}")
+    print(f"    Índice en  : {INDEX_FOLDER}/")
 
-
-# ─────────────────────────────────────────────
-# Flujo: Consulta
-# ─────────────────────────────────────────────
+# Flujo 2: Consulta
 
 def load_store() -> VectorStore:
     """Carga el VectorStore desde disco."""
     if not os.path.exists(INDEX_FOLDER):
-        print(f"[ERROR] No hay indice en '{INDEX_FOLDER}/'. Ejecuta primero: python main.py --index")
+        print(f"[ERROR] No hay índice en '{INDEX_FOLDER}/'. Ejecuta primero: python main.py --index")
         sys.exit(1)
     store = VectorStore()
     store.load(INDEX_FOLDER)
@@ -114,8 +100,8 @@ def run_single_query(question: str, model_arg: str = None):
         print("\n" + "-" * 60)
         print("  FUENTES UTILIZADAS")
         print("-" * 60)
-        for meta, score in result["retrieved_chunks"]:
-            print(f"  * {meta['source']} | chunk {meta['chunk_id']} | score {score:.4f}")
+        for entry, score in result["retrieved_chunks"]:
+            print(f"  * {entry['source']} | chunk {entry['chunk_id']} | score {score:.4f}")
 
 
 def run_interactive(model_arg: str = None):
@@ -129,9 +115,7 @@ def run_interactive(model_arg: str = None):
     engine = RAGEngine(store, model=model)
 
     print(f"\n  Modelo activo: {model}")
-    print("  Respondo preguntas sobre cualquier documento indexado.")
-    print("  Si la información no está en los documentos, lo indicaré.")
-    print("  Puedes escribir 'cambiar modelo' en cualquier momento.\n")
+    print("  Respondo preguntas sobre los documentos indexados.\n")
 
     while True:
         question = input("Pregunta: ").strip()
@@ -142,64 +126,35 @@ def run_interactive(model_arg: str = None):
             print("Hasta luego.")
             break
 
-        if question.lower() in ("cambiar modelo", "cambiar", "modelo"):
-            model  = select_model()
-            engine = RAGEngine(store, model=model)
-            print(f"  Modelo cambiado a: {model}\n")
-            continue
-
-        result = engine.query(question, verbose=False)
+        result = engine.query(question)
         print(f"\n--- RESPUESTA [{result['model']}] ---")
         print(result["answer"])
 
         if result["retrieved_chunks"]:
             print("\n--- FUENTES ---")
-            for meta, score in result["retrieved_chunks"]:
-                print(f"  * {meta['source']} | chunk {meta['chunk_id']} | score {score:.4f}")
+            for entry, score in result["retrieved_chunks"]:
+                print(f"  * {entry['source']} | chunk {entry['chunk_id']} | score {score:.4f}")
         print()
 
-
-def run_list_models():
-    """Lista los modelos de chat disponibles en Ollama (excluye embeddings)."""
-    print("=" * 60)
-    print("  MODELOS DE CHAT DISPONIBLES EN OLLAMA")
-    print("=" * 60)
-    try:
-        models = get_available_models()
-        if not models:
-            print("  No hay modelos de chat instalados.")
-            print("  Instala uno con: ollama pull mistral")
-        else:
-            for i, name in enumerate(models, 1):
-                print(f"  {i}. {name}")
-    except RuntimeError as e:
-        print(f"  [ERROR] {e}")
-
-
-# ─────────────────────────────────────────────
 # Punto de entrada
-# ─────────────────────────────────────────────
+
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Sistema RAG local con Ollama + FAISS\n"
-                    "Formatos soportados: .txt | .pdf | .docx",
+        description="Sistema RAG local con Ollama\nFormatos soportados: .txt",
         formatter_class=argparse.RawTextHelpFormatter,
     )
 
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument("--index",       action="store_true",
-                       help="Indexar documentos en docs/ (.txt, .pdf, .docx)")
+                       help="Indexar documentos en docs/")
     group.add_argument("--query",       type=str, metavar="PREGUNTA",
                        help="Realizar una consulta directa")
     group.add_argument("--interactive", action="store_true",
-                       help="Modo interactivo (multiples preguntas)")
-    group.add_argument("--models",      action="store_true",
-                       help="Listar modelos de chat disponibles en Ollama")
+                       help="Modo interactivo (múltiples preguntas)")
 
     parser.add_argument("--model", type=str, default=None, metavar="NOMBRE",
-                        help="Nombre del modelo Ollama a usar (ej: mistral, llama3)\n"
-                             "Si no se especifica, se muestra seleccion interactiva.")
+                        help="Modelo Ollama a usar (ej: mistral, llama3)")
 
     args = parser.parse_args()
 
@@ -209,8 +164,6 @@ def main():
         run_single_query(args.query, model_arg=args.model)
     elif args.interactive:
         run_interactive(model_arg=args.model)
-    elif args.models:
-        run_list_models()
 
 
 if __name__ == "__main__":

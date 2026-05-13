@@ -3,7 +3,7 @@ document_loader.py
 Carga documentos de texto plano (.txt), PDF (.pdf) y Word (.docx),
 y los divide en chunks con solapamiento.
 
-Dependencias para nuevos formatos:
+Dependencias:
   pip install pypdf python-docx
 """
 
@@ -18,11 +18,10 @@ from typing import List, Dict
 
 class Chunk:
     """Representa un fragmento de texto con metadatos."""
-    def __init__(self, text: str, source: str, chunk_id: int, start_char: int):
-        self.text       = text
-        self.source     = source        # nombre del archivo original
-        self.chunk_id   = chunk_id
-        self.start_char = start_char
+    def __init__(self, text: str, source: str, chunk_id: int):
+        self.text     = text
+        self.source   = source      # nombre del archivo original
+        self.chunk_id = chunk_id
 
     def __repr__(self):
         preview = self.text[:60].replace("\n", " ")
@@ -40,59 +39,43 @@ def load_txt(path: str) -> str:
 
 
 def load_pdf(path: str) -> str:
-    """
-    Extrae texto de un PDF usando pypdf.
-    Para PDFs escaneados (sin texto embebido) el resultado puede ser vacío;
-    en ese caso se advierte al usuario.
-    """
+    """Extrae texto de un PDF usando pypdf."""
     try:
         from pypdf import PdfReader
     except ImportError:
-        raise ImportError(
-            "pypdf no está instalado. Instálalo con:\n"
-            "  pip install pypdf"
-        )
+        raise ImportError("pypdf no está instalado. Instálalo con: pip install pypdf")
 
     reader = PdfReader(path)
     pages_text = []
-    for i, page in enumerate(reader.pages):
+    for page in reader.pages:
         text = page.extract_text() or ""
         if text.strip():
             pages_text.append(text)
-        # Si una página no tiene texto, puede ser escaneada
+
     full_text = "\n\n".join(pages_text)
 
     if not full_text.strip():
-        print(f"  [AVISO] '{os.path.basename(path)}': sin texto extraíble "
-              f"(¿PDF escaneado?). Se omite.")
+        print(f"  [AVISO] '{os.path.basename(path)}': sin texto extraíble (¿PDF escaneado?). Se omite.")
         return ""
 
     return full_text
 
 
 def load_docx(path: str) -> str:
-    """
-    Extrae texto de un archivo Word (.docx) usando python-docx.
-    Incluye texto de párrafos y tablas.
-    """
+    """Extrae texto de un archivo Word (.docx) usando python-docx."""
     try:
         import docx
     except ImportError:
-        raise ImportError(
-            "python-docx no está instalado. Instálalo con:\n"
-            "  pip install python-docx"
-        )
+        raise ImportError("python-docx no está instalado. Instálalo con: pip install python-docx")
 
-    doc = docx.Document(path)
+    doc   = docx.Document(path)
     parts = []
 
-    # Párrafos normales
     for para in doc.paragraphs:
         text = para.text.strip()
         if text:
             parts.append(text)
 
-    # Texto dentro de tablas
     for table in doc.tables:
         for row in table.rows:
             row_texts = [cell.text.strip() for cell in row.cells if cell.text.strip()]
@@ -102,9 +85,8 @@ def load_docx(path: str) -> str:
     return "\n\n".join(parts)
 
 
-# ─────────────────────────────────────────────
 # Carga de documentos desde carpeta
-# ─────────────────────────────────────────────
+
 
 SUPPORTED_EXTENSIONS = {".txt", ".pdf", ".docx"}
 
@@ -134,8 +116,6 @@ def load_documents_from_folder(folder: str) -> List[Dict]:
                 text = load_pdf(filepath)
             elif ext == ".docx":
                 text = load_docx(filepath)
-            else:
-                continue
         except Exception as e:
             print(f"  [ERROR] No se pudo leer '{filename}': {e}")
             continue
@@ -153,13 +133,65 @@ def load_documents_from_folder(folder: str) -> List[Dict]:
 # ─────────────────────────────────────────────
 # Limpieza y chunking
 # ─────────────────────────────────────────────
-
 def clean_text(text: str) -> str:
-    """Limpieza básica: colapsa espacios múltiples y líneas en blanco excesivas."""
-    text = re.sub(r"\r\n", "\n", text)
+    """
+    Limpieza avanzada para PDFs académicos.
+
+    Mejora:
+    - elimina saltos raros de PDF
+    - evita palabras pegadas incorrectamente
+    - elimina espacios múltiples
+    - elimina líneas basura comunes
+    - mejora chunks para retrieval + RAGAS
+    """
+
+    if not text:
+        return ""
+
+    # Normalizar saltos de línea
+    text = text.replace("\r\n", "\n")
+    text = text.replace("\r", "\n")
+
+    # Eliminar encabezados comunes del PDF
+    basura_pdf = [
+        "FR-PD-G-501",
+        "Programa de Asignatura",
+        "Versión 6.0",
+        "Optimización y Mejoramiento",
+        "Página 1 de 5",
+        "Página 2 de 5",
+        "Página 3 de 5",
+        "Página 4 de 5",
+        "Página 5 de 5",
+    ]
+
+    for basura in basura_pdf:
+        text = text.replace(basura, "")
+
+    # Corregir espacios múltiples
+    text = re.sub(r"[ \t]+", " ", text)
+
+    # Corregir demasiados saltos
     text = re.sub(r"\n{3,}", "\n\n", text)
-    text = re.sub(r" {2,}", " ", text)
-    return text.strip()
+
+    # IMPORTANTE:
+    # evitar que palabras de líneas distintas
+    # se peguen mal como:
+    #
+    # Análisis y Diseño de Sistemas
+    # Arquitectura
+    #
+    # Aquí intentamos mantener separación lógica
+    text = re.sub(
+        r"([a-záéíóúñ])\n([A-ZÁÉÍÓÚÑ])",
+        r"\1. \2",
+        text
+    )
+
+    # Eliminar espacios al inicio/final
+    text = text.strip()
+
+    return text
 
 
 def chunk_text(
@@ -173,7 +205,7 @@ def chunk_text(
     Divide texto en chunks de `chunk_size` caracteres con `overlap` de solapamiento.
     El solapamiento preserva contexto entre chunks consecutivos.
     """
-    text = clean_text(text)
+    text     = clean_text(text)
     chunks   = []
     pos      = 0
     chunk_id = start_id
@@ -182,21 +214,17 @@ def chunk_text(
         end      = pos + chunk_size
         fragment = text[pos:end]
 
-        # Si no es el último chunk, intentar cortar en espacio/salto de línea
+        # Intentar cortar en un espacio o salto de línea natural
         if end < len(text):
-            last_break = max(
-                fragment.rfind(" "),
-                fragment.rfind("\n"),
-            )
+            last_break = max(fragment.rfind(" "), fragment.rfind("\n"))
             if last_break > chunk_size // 2:
                 fragment = fragment[:last_break]
                 end      = pos + last_break
 
         chunks.append(Chunk(
-            text       = fragment.strip(),
-            source     = source,
-            chunk_id   = chunk_id,
-            start_char = pos,
+            text     = fragment.strip(),
+            source   = source,
+            chunk_id = chunk_id,
         ))
         chunk_id += 1
         pos       = end - overlap   # retroceso = solapamiento

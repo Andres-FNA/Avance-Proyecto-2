@@ -1,39 +1,12 @@
-# 🛰️ RAG Local — Analizador de Documentos Académicos
+#  RAG Local — Analizador de Documentos Académicos
 
 > Sistema de **Retrieval-Augmented Generation** completamente local, sin APIs externas, sin costo por consulta y con privacidad total de los datos. Diseñado específicamente para el análisis de corpus académicos: artículos científicos, tesis, revisiones bibliográficas y reportes de investigación.
 
-[![Python](https://img.shields.io/badge/Python-3.10%2B-blue?style=flat-square&logo=python)](https://www.python.org/)
-[![Ollama](https://img.shields.io/badge/Ollama-local%20LLM-black?style=flat-square)](https://ollama.com/)
-[![FAISS](https://img.shields.io/badge/FAISS-vector%20search-orange?style=flat-square)](https://faiss.ai/)
-[![sentence--transformers](https://img.shields.io/badge/sentence--transformers-embeddings-red?style=flat-square)](https://www.sbert.net/)
-[![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)](LICENSE)
-[![Estado](https://img.shields.io/badge/estado-estable-brightgreen?style=flat-square)]()
 
----
 
 ## Tabla de contenidos
 
-- [¿Qué hace este proyecto?](#-qué-hace-este-proyecto)
-- [¿Por qué RAG local y no una API?](#-por-qué-rag-local-y-no-una-api)
-- [Arquitectura del sistema](#-arquitectura-del-sistema)
-- [Requisitos previos](#-requisitos-previos)
-- [Instalación](#-instalación)
-- [Estructura del proyecto](#-estructura-del-proyecto)
-- [Guía de uso](#-guía-de-uso)
-- [Referencia de comandos](#-referencia-de-comandos)
-- [Configuración avanzada](#-configuración-avanzada)
-- [Cómo funciona internamente](#-cómo-funciona-internamente)
-- [Modelos compatibles](#-modelos-compatibles)
-- [Conversión de documentos](#-conversión-de-documentos)
-- [Pruebas de funcionamiento](#-pruebas-de-funcionamiento)
-- [Errores frecuentes](#-errores-frecuentes)
-- [Decisiones técnicas](#-decisiones-técnicas)
-- [Roadmap](#-roadmap)
-- [Licencia](#-licencia)
-
----
-
-## 🔍 ¿Qué hace este proyecto?
+##  ¿Qué hace este proyecto?
 
 Este sistema te permite cargar cualquier conjunto de documentos `.txt` y hacerles preguntas en lenguaje natural. A diferencia de un buscador por palabras clave, la búsqueda es **semántica**: encuentra los fragmentos más relevantes aunque no uses las palabras exactas del documento.
 
@@ -64,7 +37,7 @@ El modelo responde **únicamente con lo que está en tus documentos**, cita la f
 
 ---
 
-## 🤔 ¿Por qué RAG local y no una API?
+##  ¿Por qué RAG local y no una API?
 
 La alternativa obvia sería enviar los documentos a Gemini, ChatGPT u otro servicio externo. Estas son las razones por las que este proyecto toma el camino contrario:
 
@@ -82,7 +55,7 @@ Para documentos académicos con datos preliminares, investigaciones inéditas o 
 
 ---
 
-## 🏗️ Arquitectura del sistema
+##  Arquitectura del sistema
 
 El sistema está compuesto por cuatro módulos independientes con responsabilidades bien delimitadas:
 
@@ -115,7 +88,7 @@ pregunta  →  embedding  →  FAISS search  →  top-K chunks  →  prompt  →
 
 ---
 
-## ✅ Requisitos previos
+## Requisitos previos
 
 Antes de instalar el proyecto asegúrate de tener lo siguiente:
 
@@ -141,7 +114,7 @@ Antes de instalar el proyecto asegúrate de tener lo siguiente:
 
 ---
 
-## 🚀 Instalación
+## Instalación
 
 ### Paso 1 — Clonar el repositorio
 
@@ -232,7 +205,7 @@ Si ambos comandos responden sin error, la instalación está completa.
 
 ---
 
-## 📁 Estructura del proyecto
+##  Estructura del proyecto
 
 ```
 rag-local/
@@ -255,7 +228,7 @@ rag-local/
     └── chunks.json           #   Metadatos: texto, fuente y posición de cada chunk
 ```
 
-> ⚠️ La carpeta `vector_db/` se genera automáticamente. No la crees manualmente.
+>  La carpeta `vector_db/` se genera automáticamente. No la crees manualmente.
 
 **`.gitignore` recomendado:**
 ```
@@ -268,11 +241,11 @@ __pycache__/
 
 ---
 
-## 📖 Guía de uso
+## Guía de uso
 
 ### Preparar los documentos
 
-Coloca tus archivos `.txt` (codificación UTF-8) en la carpeta `docs/`. El sistema procesará todos los archivos que encuentre.
+Coloca tus archivos .txt,PDF o word (codificación UTF-8) en la carpeta `docs/`. El sistema procesará todos los archivos que encuentre.
 
 ```
 docs/
@@ -288,7 +261,7 @@ docs/
 
 ### Modo 1 — Indexación
 
-**Siempre es el primer paso.** Procesa los documentos, genera los embeddings y construye el índice FAISS.
+ Procesa los documentos, genera los embeddings y construye el índice FAISS.
 
 ```bash
 python main.py --index
@@ -328,7 +301,7 @@ python main.py --index
 ============================================================
 ```
 
-> 🔄 **¿Cuándo re-indexar?** Cada vez que agregues, elimines o modifiques documentos en `docs/`. No es necesario re-indexar para hacer consultas sobre el corpus ya indexado.
+>  **¿Cuándo re-indexar?** Cada vez que agregues, elimines o modifiques documentos en `docs/`. No es necesario re-indexar para hacer consultas sobre el corpus ya indexado.
 
 ---
 
@@ -448,7 +421,7 @@ Web of Science o Google Scholar.
 
 ---
 
-## 📋 Referencia de comandos
+##  Referencia de comandos
 
 ```bash
 python main.py --help                                    # Ver ayuda completa
@@ -471,7 +444,7 @@ python main.py --interactive --model gemma:2b            # Interactivo con model
 
 ---
 
-## ⚙️ Configuración avanzada
+##  Configuración avanzada
 
 ### Parámetros de chunking — `main.py`
 
@@ -602,12 +575,12 @@ El sistema es compatible con cualquier modelo disponible en Ollama. Opciones rec
 
 | Modelo | Tamaño | RAM necesaria | Velocidad (sin GPU) | Calidad en español |
 |--------|--------|--------------|--------------------|--------------------|
-| `mistral` | 7B Q4 | ~5 GB | ⭐⭐⭐ | ⭐⭐⭐⭐ |
-| `llama3` | 8B Q4 | ~6 GB | ⭐⭐⭐ | ⭐⭐⭐⭐ |
-| `llama3:70b` | 70B Q4 | ~48 GB | ⭐ | ⭐⭐⭐⭐⭐ |
-| `gemma:2b` | 2B Q4 | ~2 GB | ⭐⭐⭐⭐⭐ | ⭐⭐ |
-| `gemma:7b` | 7B Q4 | ~5 GB | ⭐⭐⭐ | ⭐⭐⭐ |
-| `phi3` | 3.8B Q4 | ~3 GB | ⭐⭐⭐⭐ | ⭐⭐⭐ |
+| `mistral` | 7B Q4 | ~5 GB | ⭐⭐⭐ 
+| `llama3` | 8B Q4 | ~6 GB | ⭐⭐⭐ 
+| `llama3:70b` | 70B Q4 | ~48 GB | ⭐ 
+| `gemma:2b` | 2B Q4 | ~2 GB | ⭐⭐⭐⭐⭐ |
+| `gemma:7b` | 7B Q4 | ~5 GB | ⭐⭐⭐ |
+| `phi3` | 3.8B Q4 | ~3 GB | ⭐⭐⭐⭐ |
 
 **Recomendación:** para análisis académico en español con hardware sin GPU, `mistral` ofrece el mejor balance entre calidad de respuesta y velocidad.
 
@@ -675,18 +648,6 @@ done
 ---
 
 ## 🧪 Pruebas de funcionamiento
-
-Entorno de pruebas utilizado:
-
-| Parámetro | Valor |
-|-----------|-------|
-| Sistema operativo | Ubuntu 22.04 LTS |
-| Python | 3.11.4 |
-| Modelo de embeddings | paraphrase-multilingual-MiniLM-L12-v2 |
-| Modelo LLM | Mistral 7B Q4 (Ollama 0.1.32) |
-| Hardware | Intel Core i7-11th Gen, 16 GB RAM, sin GPU |
-| Corpus | 4 documentos académicos en español (~18.000 palabras) |
-| Chunks generados | 61 chunks (600 chars, 150 overlap) |
 
 ### Resultados
 
@@ -778,35 +739,5 @@ Resumen:
 | Cliente HTTP | requests | SDK oficial de Ollama | Control directo de parámetros, sin dependencias extras |
 | CLI | argparse | click, typer | Biblioteca estándar, sin instalación adicional |
 
----
-
-## 🗺️ Roadmap
-
-- [ ] Soporte nativo para PDF (sin conversión previa)
-- [ ] Soporte nativo para DOCX
-- [ ] Interfaz web local (FastAPI + frontend)
-- [ ] Modo multi-corpus (indexar carpetas separadas y consultar entre ellas)
-- [ ] Historial de conversación en modo interactivo
-- [ ] Exportación de respuestas y fuentes a archivo
-- [ ] Soporte para imágenes en documentos (modelos multimodales via Ollama)
-- [ ] Métricas de evaluación automática (RAGAS, BERTScore)
-- [ ] Script de conversión automática de PDF/DOCX integrado
-
----
-
-## 📜 Licencia
-
-MIT License — libre para uso académico y comercial. Ver [LICENSE](LICENSE) para el texto completo.
-
----
-
-<div align="center">
-
-**¿Encontraste un bug? ¿Tienes una sugerencia?**<br>
-Abre un [Issue](https://github.com/usuario/rag-local/issues) o un [Pull Request](https://github.com/usuario/rag-local/pulls).
-
-<br>
-
-Construido con [Ollama](https://ollama.com/) · [FAISS](https://faiss.ai/) · [sentence-transformers](https://www.sbert.net/)
 
 </div>
